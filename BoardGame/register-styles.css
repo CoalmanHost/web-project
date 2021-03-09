@@ -60,7 +60,8 @@ body{
     border-radius: 10px;
     align-content: center;
     justify-content: center;
-    padding-left: 0px;
+    padding-left: 0;
+    align-self: center;
 }
 #button:hover{
     background-image: url("https://64.media.tumblr.com/6c6389bb2a37ee96ad674d053275a043/5752a60a443551b3-6b/s400x600/9a1194eac5c8a861ed338283c68c182911ba44c2.gifv");
