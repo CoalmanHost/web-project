@@ -1,0 +1,30 @@
+@font-face{
+    font-family: "JediRu";
+    src: url("public/fonts/StarJedi.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+}
+@font-face {
+    font-family: "Cyber";
+    src: url("public/fonts/Cyber.otf") format("opentype");
+    font-style: normal;
+    font-weight: normal;
+}
+@font-face {
+    font-family: "Crime";
+    src: url("public/fonts/Crime.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+}
+@font-face {
+    font-family: "Bittlejuice";
+    src: url("public/fonts/Bittlejuice.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+}
+@font-face {
+    font-family: "Hand";
+    src: url("public/fonts/Hand.otf") format("opentype");
+    font-style: normal;
+    font-weight: normal;
+}
