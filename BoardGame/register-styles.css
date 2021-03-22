@@ -1,0 +1,107 @@
+*{
+    padding:0;
+    margin:0;
+}
+body{
+    font-family: 'JediRu', serif;
+    letter-spacing: 4px;
+    min-height: 100vh;
+    background: black;
+    background-image: url("https://img5.goodfon.ru/wallpaper/nbig/f/ef/mizuri-official-by-mizuri-official-star-wars-zvezdnye-voiny.jpg");
+    background-position-y: -150px;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    display:flex;
+    justify-content: center;
+}
+.register{
+    box-shadow: 0 0 10px #ea3438;
+    align-self: center;
+    width: 400px;
+    position: absolute;
+    margin-top: 5%;
+    background-image: url("https://i.gifer.com/origin/7e/7e4abc8a38403620fdb573948aa5c9b1_w200.gif");
+}
+.register form input{
+    font-family: 'Crime', serif;
+    padding-left: 20px;
+    margin: 20px;
+    background-color: black;
+    color:white;
+    height:50px;
+    width:80%;
+    align-self: center;
+    font-size: 25px;
+    outline:none;
+    border: none;
+    border-bottom: 1px solid #ea3438;
+    box-shadow: 0 2px 5px #ea3438;
+}
+.register form{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.register h2{
+    text-align: center;
+    color:white;
+    padding: 5px 5px 10px;
+}
+.register form h4{
+    padding-left: 40px;
+    color:white;
+    font-size: 15px;
+}
+#button{
+    display: flex;
+    font-family: 'JediRu', serif;
+    font-size: 15px;
+    width:50%;
+    border-radius: 10px;
+    align-content: center;
+    justify-content: center;
+    padding-left: 0;
+    align-self: center;
+}
+#button:hover{
+    background-image: url("https://64.media.tumblr.com/6c6389bb2a37ee96ad674d053275a043/5752a60a443551b3-6b/s400x600/9a1194eac5c8a861ed338283c68c182911ba44c2.gifv");
+}
+label{
+    position: relative;
+}
+#password-control {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    display: inline-block;
+    width: 60px;
+    height: 50px;
+    background-image: url("pics/openEye.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: invert(100%);
+    background-size: 60%;
+}
+
+@media (min-width:300px) and (max-width:500px){
+    body{
+        background-size: 100%;
+        background-image: url("https://img1.akspic.ru/previews/7/3/7/8/4/148737/148737-zvezdnye_vojny_battlefront-temnota-rokkoncert-ea_dice-performans-360x640.jpg");
+    }
+    .register{
+        height:90%;
+    }
+}
+
+@media all and (min-width:501px) and (max-width: 1000px) {
+    body{
+        background: black none;
+    }
+    .register{
+        width: 80%;
+    }
+    #password-control {
+        top: 20%;
+        right: 15%;
+    }
+}

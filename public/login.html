@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="../src/register-styles.css">
+    <link rel="stylesheet" href="../src/fonts.css">
+    <style>
+        #reg{
+            font-family: 'Crime', serif;
+            font-size:15px;
+            letter-spacing: 1px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="register">
+    <h2>Вход</h2>
+    <form name="register" method="post" action="">
+        <h4>Введите логин или почту</h4>
+        <label>
+            <input type="text" placeholder="Sith">
+        </label>
+        <h4>Введите пароль</h4>
+        <label>
+            <input class="password-input" type="password" placeholder="123456789">
+            <a href="#" id="password-control"></a>
+        </label>
+            <input id="button" type="button" value="Войти" width="50%">
+    </form>
+    <a id="reg" href="register-page.html" >Нет аккаунта? Зарегистрируйтесь!</a>
+</div>
+</body>
+<script src="../src/showPassword.js">
+</script>
+<script src="../src/nextPage.js">
+</script>
+</html>
