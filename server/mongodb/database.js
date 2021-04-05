@@ -1,24 +1,15 @@
 const MongoClient = require('mongodb').MongoClient;
-
+const dbURL = require('../config.js').dbURL;
 const databaseName = 'web-project';
 const playersCollectionName = 'players';
 const matchesCollectionName = 'matches';
 const cardsCollectionName = 'cards';
+const cryptPassword = require('../logic/encrypting').cryptPassword;
 
-const crypto = require('crypto');
-
-function cryptPassword(password) {
-    return crypto.createHash('md5').update(password).digest('hex');
-}
-
-class Database {
-    constructor() {
-        //this.mongoClient = new MongoClient('mongodb://localhost:27017/', { useUnifiedTopology: true });
-    }
-    static addPlayer(player) {
-        let mongoClient = new MongoClient('mongodb://localhost:27017/', { useUnifiedTopology: true });
+class DatabaseClient {
+    static addPlayer(player, callback) {
         let pid = undefined;
-        mongoClient.connect(function(err, client){
+        MongoClient.connect(dbURL, function(err, client){
             if(err){
                 return console.log(err);
             }
@@ -30,30 +21,31 @@ class Database {
                 if (err) console.log(err);
                 pid = result.insertedId;
                 client.close();
-                return pid;
+                callback(pid);
             });
         });
     }
-    static getPlayerData(name, password) {
-        let mongoClient = new MongoClient('mongodb://localhost:27017/', { useUnifiedTopology: true });
+    static getPlayerData(query, callback) {
         let player = undefined;
-        mongoClient.connect(function(err, client){
-
-            if(err){
-                return console.log(err);
-            }
-            const db = client.db(databaseName);
-            const collection = db.collection(playersCollectionName);
-            console.log(`Getting data of player ${name} with password ${password}`);
-            collection.findOne({name: name, password: cryptPassword(password)}, function (err, result) {
-                if (err) console.log(err);
-                console.log(result);
-                player = result;
-                client.close();
-                return player;
-            });
+        let db = undefined;
+        let collection = undefined;
+        let client = undefined;
+        MongoClient.connect(dbURL).then(cl => {
+            client = cl;
+            db = client.db(databaseName);
+            collection = db.collection(playersCollectionName);
+            console.log(`Getting data of player ${JSON.stringify(query)}`);
+            return collection.findOne(query);
+        }).then(res => {
+            player = res;
+            if (player === null) console.log(`Player ${JSON.stringify(query)} is not found`);
+            else console.log(`Found player ${player.name} with id ${player._id}`);
+            client.close();
+            callback(player);
+        }).catch(err => {
+            console.log(err);
         });
     }
 }
 
-module.exports = Database;
+module.exports.DatabaseClient = DatabaseClient;
