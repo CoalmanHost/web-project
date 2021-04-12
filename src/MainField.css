@@ -1,0 +1,43 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+body{
+    background-image: url("https://the-flow.ru/uploads/images/resize/830x0/adaptiveResize/03/01/24/23/76/a536f2740cd7.jpg");
+    background-repeat: no-repeat;
+    background-size:100%;
+    height:100%;
+    background-color: cornflowerblue;
+}
+#root{
+    height:100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.container{
+    width:80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height:100%;
+}
+html{
+    height:100%;
+}
+
+.name{
+    margin:50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer{
+    margin: 50px;
+}
+button{
+    height: 50px;
+    margin-top: 15px;
+    padding:5px;
+}
