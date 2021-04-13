@@ -41,3 +41,55 @@ button{
     margin-top: 15px;
     padding:5px;
 }
+#rooms .room{
+    padding:20px;
+    margin: 20px;
+    background-color: forestgreen;
+    border-radius: 15px;
+}
+#hide-content{
+    position: fixed;
+    width: 100%;
+    top:0;
+    bottom:0;
+    right:0;
+    left:0;
+    background: rgba(125, 125, 250, 0.5);
+    border:none;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    /*overflow: hidden;*/
+}
+#Modal-window{
+    width:300px;
+    background-color: azure;
+    padding:25px;
+}
+#close{
+    display: block;
+    margin-left: 95%;
+    margin-top:-5%;
+    background-color: #ea3438;
+    border-radius: 2px;
+    border: 2px solid black;
+    width: 25px;
+    height:25px;
+}
+#form-modal{
+    display: flex;
+    flex-direction: column;
+}
+#rooms{
+    overflow: auto;
+    background-color: black;
+    border-radius: 5px;
+}
+#search-field{
+    height: 40px;
+    width: 80%;
+}
+#search{
+    height:35px;
+    width: 80%;
+}
