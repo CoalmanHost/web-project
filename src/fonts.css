@@ -1,30 +1,30 @@
 /*@font-face{
     font-family: "JediRu";
-    src: url("/fonts/StarJedi.ttf") format("truetype");
+    src: local("JediRu"), url("StarJedi.ttf") format("truetype");
     font-style: normal;
     font-weight: normal;
 }
 @font-face {
     font-family: "Cyber";
-    src: url("/fonts/Cyber.otf") format("opentype");
+    src: local("Cyber"), url("public/Cyber.otf") format("opentype");
     font-style: normal;
     font-weight: normal;
 }
 @font-face {
     font-family: "Crime";
-    src: url("/fonts/Crime.ttf") format("truetype");
+    src: local("Crime"), url("public/Crime.ttf") format("truetype");
     font-style: normal;
     font-weight: normal;
 }
 @font-face {
     font-family: "Bittlejuice";
-    src: url("/fonts/Bittlejuice.ttf") format("truetype");
+    src: local("Bittlejuice"), url("public/Bittlejuice.ttf") format("truetype");
     font-style: normal;
     font-weight: normal;
 }
 @font-face {
     font-family: "Hand";
-    src: url("/fonts/Hand.otf") format("opentype");
+    src: local("Hand"), url("public/Hand.otf") format("opentype");
     font-style: normal;
     font-weight: normal;
 }*/

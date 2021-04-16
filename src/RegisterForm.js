@@ -1,5 +1,7 @@
 import React from 'react';
 import "./Forms.css";
+import "./fonts.css";
+import password from "./showPass.js";
 
 const Register = () => {
     return (
@@ -17,7 +19,7 @@ const Register = () => {
                 <h4>Введите пароль</h4>
                 <label>
                     <input name = "userPassword" className="password-input" type="password" placeholder="123456789"/>
-                        <a href="#" id="password-control"></a>
+                        <a href="#" id="password-control" onClick={password}></a>
                 </label>
                 <h4>Введите пароль повторно</h4>
                 <label>

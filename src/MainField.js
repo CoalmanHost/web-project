@@ -1,5 +1,6 @@
 import React from 'react';
 import './MainField.css';
+import "./fonts.css";
 
 const Main = () => {
     function searchRoom() {
@@ -13,41 +14,46 @@ const Main = () => {
             }
         })
     }
-    function refreshRooms(){
+
+    function refreshRooms() {
         document.getElementById("refresh").addEventListener('click', function () {
             const rooms = document.getElementsByClassName("room");
             for (let i = 0; i < rooms.length; i++) {
-                    rooms[i].style.display = "block";
+                rooms[i].style.display = "block";
             }
         })
     }
+
     function newRoom() {
         document.getElementById("hide-content").style.display = "flex";
         const body = document.getElementsByTagName("body");
         for (let i = 0; i < body.length; i++) {
             body[i].style.overflow = "invisible";
         }
-        document.getElementById("sub").addEventListener('click', function () {
-            const room = document.getElementById("room-name").value;
-            if (room !== "") {
-                const gen = Math.ceil(Math.random() * 100000000);
-                document.getElementById("rooms").innerHTML += "<a href = '#'><div class='room " + room + " " + gen + "'> Комната " + room + " (id:" + gen + ")</div></a>";
-                document.getElementById("hide-content").style.display = "none";
-                const body = document.getElementsByTagName("body");
-                for (let i = 0; i < body.length; i++) {
-                    body[i].style.overflow = "visible";
-                }
-            } else {
-                alert("You should insert a room name");
-            }
-        })
-        document.getElementById("close").addEventListener('click', function () {
+    }
+
+    function createRoom() {
+        console.log("clicked!")
+        const room = document.getElementById("room-name").value;
+        if (room !== "") {
+            const gen = Math.ceil(Math.random() * 100000000);
+            document.getElementById("rooms").innerHTML += "<a href = '#'><div class='room " + room + " " + gen + "'> Комната " + room + " (id:" + gen + ")</div></a>";
             document.getElementById("hide-content").style.display = "none";
             const body = document.getElementsByTagName("body");
             for (let i = 0; i < body.length; i++) {
                 body[i].style.overflow = "visible";
             }
-        })
+        } else {
+            alert("You should insert a room name");
+        }
+    }
+
+    function closeRoomChoice() {
+        document.getElementById("hide-content").style.display = "none";
+        const body = document.getElementsByTagName("body");
+        for (let i = 0; i < body.length; i++) {
+            body[i].style.overflow = "visible";
+        }
     }
 
     return (
@@ -75,19 +81,20 @@ const Main = () => {
             </div>
             <div id="hide-content">
                 <div id="Modal-window">
-                    <button id={"close"}>X</button>
+                    <button id={"close"} onClick={closeRoomChoice}>X</button>
                     <div id="form-modal">
                         <label>
                             Введите название комнаты
                             <input name={"room-name"} id="room-name"></input>
                         </label>
                         <label>
-                            <input type={"submit"} id={"sub"}></input>
+                            <input type={"submit"} id={"sub"} onClick={createRoom} value={"Создать"}></input>
                         </label>
                     </div>
                 </div>
             </div>
         </div>
     )
+
 }
 export default Main;
