@@ -1,0 +1,84 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width:100%;
+    background-color: yellow;
+}
+.icons{
+    width:20%;
+    background-color: forestgreen;
+}
+.field{
+    width:65%;
+    background-color: red;
+}
+.packages{
+    width:15%;
+    background-color: deepskyblue;
+}
+.icons{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.icon {
+    background-color: black;
+    height: 20%;
+    margin: 10%;
+}
+.effects{
+    width: 100%;
+    height:30%;
+    background-color: brown;
+
+}
+.field{
+    height: 100%;
+    width: 100%;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+}
+.rows{
+    height:50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.game-section{
+    height: 25%;
+    width: 100%;
+    border: 2px solid black;
+    background-color: purple;
+}
+.myCards{
+    width: 100%;
+    height: 25%;
+    background-color: chartreuse;
+    display: flex;
+    justify-content: center;
+}
+.packages{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.package{
+    width: 50%;
+    height:15%;
+    margin: 20%;
+    background-color: black;
+}
+.card{
+    animation-delay: 1s;
+    margin: 5px;
+    min-width:75px;
+    background-color: black;
+    border-radius: 5px;
+}
+.card:hover{
+    width:250px;
+    height:350px;
+    margin-top: -240px;
+}

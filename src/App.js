@@ -7,15 +7,20 @@ import Main from './MainField.js';
 import Register from "./RegisterForm";
 import Login from "./LoginForm";
 import LoginForm from "./LoginForm";
-/*import openSocket from 'socket.io-client';
-const socket = openSocket("https://localhost:3000");
-socket.on();*/
+import Room from "./Room"
+
+import openSocket from 'socket.io-client';
+const socket = openSocket("http://25.74.123.131:8080");
+socket.on('get rooms', rooms => {
+    console.log(rooms);
+} ) ;
+socket.emit("create room");
 
 function App() {
 
   return (
 
-     <Main></Main>
+     <Room></Room>
   );
 }
 
