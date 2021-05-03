@@ -3,7 +3,14 @@ class GenericCard {
         this.name = name;
         this.cost = cost;
         this.damage = damage;
+        this.played = false;
     }
+    Play() {
+        if (!this.played) {
+            this.played = true;
+        }
+    }
+
 }
 
-export default GenericCard
+module.exports = GenericCard;

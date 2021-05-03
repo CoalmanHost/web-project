@@ -1,13 +1,35 @@
-function initAuth() {
+async function initAuth() {
     const cache = require('../caches/cache');
-    const database = require('../mongodb/database').DatabaseClient;
+    const database = require('../database/database').DatabaseClient;
     const cookieParser = require('cookie-parser');
     const bodyParser = require('body-parser');
     const jwt = require('jsonwebtoken');
-    const app = require('../app');
+    const app = require('../app').app;
+    const eventer = require('../app').eventer;
     const path = require('path');
     const cryptPassword = require('../logic/encrypting').cryptPassword;
     const urlencodedParser = bodyParser.urlencoded({extended: true});
+
+    function sendStartupPage(response) {
+        response.sendFile(path.join(__dirname, '../../', 'build', 'login.html'));
+    }
+
+    function resolveJWT(token, callback) {
+        jwt.verify(
+            token,
+            tokenKey,
+            (err, payload) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                if (payload) {
+                    callback(payload._id);
+                }
+                else callback(null);
+            }
+        )
+    }
 
     app.use(cookieParser('secret key'))
     let client = cache.client;
@@ -15,36 +37,56 @@ function initAuth() {
     client.del(authUsers);
     const tokenKey = '1a2b-3c4d-5e6f-7g8h';
     app.use((req, res, next) => {
-        if (req.headers.authorization) {
+        if (req.cookies.token) {
+            console.log('JWT auth check: STARTED');
             jwt.verify(
-                req.headers.authorization.split(' ')[1],
+                //req.headers.authorization.split(' ')[1],
+                req.cookies.token,
                 tokenKey,
                 (err, payload) => {
-                    if (err) next()
-                    else if (payload) {
-                        database.getPlayerData({ _id : payload.id }, (res) => {
-                            if (res === undefined) console.log(`Have no pid ${payload.id}`);
-                            else {
-                                req.user = res;
-                                next();
+                    if (err) {
+                        console.log(err);
+                        res.sendStatus(500);
+                        return;
+                    }
+                    if (payload) {
+                        database.getPlayerData({ _id : payload._id }, (err, result) => {
+                            if (err) {
+                                console.log(err);
+                                return;
                             }
+                            if (result === undefined || result === null) {
+                                console.log(`Have no pid ${payload._id}! Returned ${JSON.stringify(result)}`);
+                                return;
+                            }
+                            req.user = result;
+                            console.log('JWT auth check: OK');
+                            next();
 
                         });
-                        if (!req.user) next();
+                        if (!req.user) {
+                            console.log('JWT auth check: FAILED');
+                            res.sendStatus(400);
+                            //sendStartupPage(res);
+                        }
                     }
                 }
             )
+            return;
         }
-
+        //console.log(`User not authorized! Request method: ${req.method}`);
         next();
     })
 
     app.get('/login', function (request, response) {
-        let token = request.cookies.token;
-        if (token === undefined) {
-            response.sendFile(path.join(__dirname, '../../', 'build', 'login.html'));
+        if (request.user) {
+            response.sendStatus(200);
         }
         else {
+            console.log('Unknown user found!');
+            sendStartupPage(response);
+        }
+            /*
             client.hget(authUsers, token, (err, reply) => {
                 if (err) {
                     console.log(err);
@@ -69,20 +111,35 @@ function initAuth() {
                     }
                 }
             });
-        }
+            */
     });
     app.post('/login', urlencodedParser, function (request, response) {
-        if(!request.body) return response.sendStatus(400);
-        console.log(`Incoming player ${JSON.stringify(request.body)}`);
-        database.getPlayerData({ name: request.body.userName, password: cryptPassword(request.body.userPassword) }, function (result) {
-            if (result === undefined) response.send('USER NOT FOUND');
+        if(!request.body) {
+            response.sendStatus(400);
+            return;
+        }
+        console.log('Attempting user authentication!');
+        database.getPlayerData({ name: request.body.userName, password: cryptPassword(request.body.userPassword) }, function (err, result) {
+            if (err) {
+                console.log(err);
+                response.sendStatus(500);
+                return;
+            }
+            if (result === undefined || result === null) response.send('USER NOT FOUND');
             else {
-                console.log(`Hello player ${JSON.stringify(result)}`);
+                console.log(`Hello player ${result._id}.`);
                 let token = request.cookies.token;
                 if (token === undefined) {
-                    token = jwt.sign(result, tokenKey);
+                    let payload = { _id: result._id };
+                    token = jwt.sign(payload, tokenKey);
+                    //response.json(token);
+                    response.cookie('token', token, {
+                        maxAge : 3600 * 24
+                    })
+                    response.sendStatus(200);
                 }
-                client.hget(authUsers, token, (err, reply) => {
+                else response.sendStatus(200);
+                /*client.hget(authUsers, token, (err, reply) => {
                     if (err)  {
                         console.log(err);
                         response.sendStatus(500);
@@ -104,9 +161,12 @@ function initAuth() {
                             response.redirect('/login');
                         }
                     }
-                });
+                });*/
             }
         });
     });
+    eventer.emit('activate module', 'Authentication');
+    module.exports.resolveJWT = resolveJWT;
+    module.exports.secret = tokenKey;
 }
-module.exports = initAuth;
+module.exports.initAuthentication = initAuth;

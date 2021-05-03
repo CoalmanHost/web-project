@@ -1,5 +1,9 @@
 class Player {
+    id;
+    handCards;
     constructor(id) {
+        this.id = id;
+        this.handCards = [];
     }
     AddTrade(amount) {
         this.trade += amount;
@@ -18,5 +22,12 @@ class Player {
     }
     Damage(amount) {
         this.authority -= amount;
+    }
+    AddCard(card) {
+        this.handCards.push(card);
+    }
+    PlayCard(card) {
+        this.handCards.remove(card);
+        card.Play();
     }
 }
