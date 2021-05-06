@@ -15,57 +15,58 @@ async function socketServer(io) {
     }
 
     const pidToSocketDictName = 'pid-socket-table';
-    const socketToPidDictName = 'socket-pid-table'
+    const socketToPidDictName = 'socket-pid-table';
+
+    function putPlayerToRoom(roomNumber, socketId) {
+        cache.hget(socketToPidDictName, socketId, (err, reply) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(`Put ${reply} to socket ${socketId}`);
+            if (reply) {
+                cache.rpush(room(roomNumber), reply);
+                cache.expire(room(roomNumber), cfg.cacheBurnTime);
+            }
+            cache.expire(socketToPidDictName, cfg.cacheBurnTime);
+            cache.expire(pidToSocketDictName, cfg.cacheBurnTime);
+        });
+    }
+
+    function erasePlayerFromRoom(roomNumber, socketId) {
+        cache.hget(socketToPidDictName, socketId, (err, reply) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            if (reply) {
+                cache.lrem(room(roomNumber), 0, reply);
+                cache.expire(room(roomNumber), cfg.cacheBurnTime);
+            }
+            cache.expire(socketToPidDictName, cfg.cacheBurnTime);
+            cache.expire(pidToSocketDictName, cfg.cacheBurnTime);
+        });
+    }
+
+    function getPlayersFromRoom(roomNumber, callback) {
+        cache.lrange(room(roomNumber), 0, 5, (err, reply) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            cache.expire(room(roomNumber), cfg.cacheBurnTime);
+            callback(reply);
+        })
+    }
 
     io.on('connection', (socket) => {
         console.log( 'A user connected' );
-
-        function putPlayerToRoom(roomNumber, socketId) {
-            cache.hget(socketToPidDictName, socketId, (err, reply) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                console.log(`Put ${reply} to socket ${socketId}`);
-                if (reply) {
-                    cache.rpush(room(roomNumber), reply);
-                    cache.expire(room(roomNumber), cfg.cacheBurnTime);
-                }
-                cache.expire(socketToPidDictName, cfg.cacheBurnTime);
-                cache.expire(pidToSocketDictName, cfg.cacheBurnTime);
-            });
-        }
-
-        function erasePlayerFromRoom(roomNumber, socketId) {
-            cache.hget(socketToPidDictName, socketId, (err, reply) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                if (reply) {
-                    cache.lrem(room(roomNumber), 0, reply);
-                    cache.expire(room(roomNumber), cfg.cacheBurnTime);
-                }
-                cache.expire(socketToPidDictName, cfg.cacheBurnTime);
-                cache.expire(pidToSocketDictName, cfg.cacheBurnTime);
-            });
-        }
-
-        function getPlayersFromRoom(roomNumber, callback) {
-            cache.lrange(room(roomNumber), 0, 5, (err, reply) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                cache.expire(room(roomNumber), cfg.cacheBurnTime);
-                callback(reply);
-            })
-        }
 
         database.getPlayerData({ name: 'Sith' }, (err, result) => {
             let payload = {_id: result._id};
             let jwt = require('jsonwebtoken');
             let token = jwt.sign(payload, auth.secret);
+            console.log(`Throwing token ${token} to socket ${socket.id}`);
             socket.emit('throw token', token);
         });
 
@@ -125,151 +126,182 @@ async function socketServer(io) {
                     });
                 }
             })
-        })
 
-        //Rooms
-
-        socket.on('create room', (callback) => {
-            let newRoomNumber = Date.now();
-            let newRoom = room(newRoomNumber);
-            socket.join(newRoom);
-            putPlayerToRoom(newRoomNumber, socket.id);
-            socket.leave(room(0));
-            console.log(`Created room ${newRoomNumber}!`);
-            callback(newRoomNumber);
-        });
-
-        socket.on('join room', (roomNumber, callback) => {
-            cache.exists(room(roomNumber), (err, reply) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                if (reply == 1) {
-                    socket.join(room(roomNumber));
-                    putPlayerToRoom(roomNumber, socket.id);
-                    socket.leave(room(0));
-                    callback(roomNumber);
-                }
-                else socket.emit('missing room', roomNumber);
+            socket.on('create room', (callback) => {
+                let newRoomNumber = Date.now();
+                let newRoom = room(newRoomNumber);
+                socket.join(newRoom);
+                putPlayerToRoom(newRoomNumber, socket.id);
+                socket.leave(room(0));
+                console.log(`Created room ${newRoomNumber}!`);
+                callback(newRoomNumber);
             });
-        });
 
-        socket.on('get rooms', (callback) => {
-            cache.keys('room*', (err, reply) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                callback(reply);
-            });
-        });
-
-        socket.on('leave room', (roomNumber, callback) => {
-            socket.leave(room(roomNumber));
-            erasePlayerFromRoom(roomNumber, socket.id);
-            socket.join(room(0));
-            callback(0);
-        });
-
-        socket.on('ready room', (roomNumber) => {
-            let game = new Game(roomNumber);
-            getPlayersFromRoom(roomNumber, (players) => {
-                if (players) {
-                    players.forEach((player) => {
-                        game.addPlayer(player);
-                    });
-                    game.start();
-                    io.to(game.room).emit('board update', game.board);
-                }
-            })
-        })
-
-        //Game
-
-        socket.on('put card', (cardId, line) => {
-            socket.rooms.forEach((room) => {
-                if (room !== room(0)) {
-                    Game.getGame(room.replace('room', ''), (game) => {
-                        if (game) {
-                            cache.hget(socketToPidDictName, socket.id, (err, pid) => {
-                                if (err) {
-                                    console.log(err);
-                                    socket.emit('something wrong');
-                                    return;
-                                }
-                                if (pid) {
-                                    game.getBoard().getSide(pid, (side) => {
-                                        if (side.ready === false) {
-                                            switch (line) {
-                                                case 'first':
-                                                    side.putToFirstLine(cardsDb.getCard(cardId));
-                                                    break;
-                                                case 'second':
-                                                    side.putToSecondLine(cardsDb.getCard(cardId));
-                                                    break;
-                                                case 'third':
-                                                    side.putToThirdLine(cardsDb.getCard(cardId));
-                                                    break;
-                                                default:
-                                                    socket.emit('something wrong');
-                                                    break;
-                                            }
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    })
-                }
-            });
-        });
-
-        socket.on('get card', (cardId, callback) => {
-            //socket.emit('get card', cardsDb.getCard(cardId));
-            callback(cardsDb.getCard(cardId));
-        });
-
-        socket.on('turn ready', (roomNumber) => {
-            Game.getGame(roomNumber, (game) => {
-                cache.hget(socketToPidDictName, socket.id, (err, reply) => {
+            socket.on('join room', (roomNumber, callback) => {
+                cache.exists(room(roomNumber), (err, reply) => {
                     if (err) {
                         console.log(err);
-                        socket.emit('something wrong');
                         return;
                     }
-                    if (reply) {
-                        game.board.getSide(reply, (side) => {
-                            side.setReady();
-                            game.board.saveSide(reply, () => {
-                                game.save(() => {
-                                    eventer.emit('board update', game);
-                                });
+                    if (reply == 1) {
+                        socket.join(room(roomNumber));
+                        putPlayerToRoom(roomNumber, socket.id);
+                        socket.leave(room(0));
+                        callback(roomNumber);
+                    }
+                    else socket.emit('missing room', roomNumber);
+                });
+            });
+
+            socket.on('get rooms', (callback) => {
+                cache.keys('room*', (err, reply) => {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    callback(reply);
+                });
+            });
+
+            socket.on('leave room', (roomNumber, callback) => {
+                socket.leave(room(roomNumber));
+                erasePlayerFromRoom(roomNumber, socket.id);
+                socket.join(room(0));
+                callback(0);
+            });
+
+            socket.on('ready room', (roomNumber) => {
+                let game = new Game(roomNumber);
+                getPlayersFromRoom(roomNumber, (players) => {
+                    if (players) {
+                        players.forEach((player) => {
+                            game.addPlayer(player);
+                        });
+                        let ready = {count: 0};
+                        game.playerIds.forEach((pid) => {
+                            game.board.getSide(pid, (side) => {
+                                for (let i = 0; i < 5; i++) {
+                                    side.putCardToHand(cardsDb.getCard('x-wing'));
+                                    side.putCardToHand(cardsDb.getCard('tie-fighter'));
+                                }
+                                this.board.saveSide(side, () => {
+                                    eventer.emit('player ready', game, ready);
+                                })
                             });
                         });
                     }
+                })
+            })
+
+            //Game
+
+            socket.on('put card', (cardId, line) => {
+                socket.rooms.forEach((r) => {
+                    if (r !== room(0)) {
+                        Game.getGame(r.replace('room', ''), (game) => {
+                            if (game) {
+                                cache.hget(socketToPidDictName, socket.id, (err, pid) => {
+                                    if (err) {
+                                        console.log(err);
+                                        socket.emit('something wrong');
+                                        return;
+                                    }
+                                    if (pid) {
+                                        game.getBoard().getSide(pid, (side) => {
+                                            if (side.ready === false) {
+                                                switch (line) {
+                                                    case 'first':
+                                                        side.putToFirstLine(cardsDb.getCard(cardId));
+                                                        break;
+                                                    case 'second':
+                                                        side.putToSecondLine(cardsDb.getCard(cardId));
+                                                        break;
+                                                    case 'third':
+                                                        side.putToThirdLine(cardsDb.getCard(cardId));
+                                                        break;
+                                                    default:
+                                                        socket.emit('something wrong');
+                                                        break;
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        })
+                    }
                 });
             });
-        })
 
-        eventer.on('board update', (game) => {
-            game.getFullBoard((board) => {
-                io.to(game.room).emit('board update', board);
-                cache.expire(game.room, cfg.cacheBurnTime);
-                cache.expire(game.gameName, cfg.cacheBurnTime);
-                cache.expire(game.board.boardName, cfg.cacheBurnTime);
+            socket.on('get card', (cardId, callback) => {
+                //socket.emit('get card', cardsDb.getCard(cardId));
+                callback(cardsDb.getCard(cardId));
+            });
+
+            socket.on('turn ready', (roomNumber) => {
+                Game.getGame(roomNumber, (game) => {
+                    cache.hget(socketToPidDictName, socket.id, (err, reply) => {
+                        if (err) {
+                            console.log(err);
+                            socket.emit('something wrong');
+                            return;
+                        }
+                        if (reply) {
+                            game.board.getSide(reply, (side) => {
+                                side.setReady();
+                                game.board.saveSide(reply, () => {
+                                    game.save(() => {
+                                        eventer.emit('board update', game);
+                                    });
+                                });
+                            });
+                        }
+                    });
+                });
             })
-        });
-
-        eventer.on('fight complete', (room, iter, winnerId) => {
-            io.to(room).emit('fight complete', iter, winnerId);
-        });
-
-        eventer.on('game end', (room, winnerId) => {
-            io.to(room).emit('game end', winnerId);
-        });
+        })
     });
 
+    eventer.on('player ready', (game, ready) => {
+        if (ready.count >= game.playerIds.length) {
+            game.start();
+            getPlayersFromRoom(game.room, (players) => {
+                players.forEach((pid) => {
+                    cache.hget(pidToSocketDictName, pid, (err, reply) => {
+                        if (err) {
+                            console.log(err);
+                            return;
+                        }
+                        if (reply) {
+                            game.getFullBoard((board) => {
+                                reply.emit('board update', board);
+                            });
+                        }
+                    });
+                });
+            })
+        }
+        else {
+            ready.count += 1;
+        }
+    })
+
+    eventer.on('board update', (game) => {
+        game.getFullBoard((board) => {
+            io.to(game.room).emit('board update', board);
+            cache.expire(game.room, cfg.cacheBurnTime);
+            cache.expire(game.gameName, cfg.cacheBurnTime);
+            cache.expire(game.board.boardName, cfg.cacheBurnTime);
+        })
+    });
+
+    eventer.on('fight complete', (room, iter, winnerId) => {
+        io.to(room).emit('fight complete', iter, winnerId);
+    });
+
+    eventer.on('game end', (room, winnerId) => {
+        io.to(room).emit('game end', winnerId);
+    });
     eventer.emit('activate module', 'Game Manager');
 }
 

@@ -74,7 +74,7 @@ cache.init();
 auth.initAuthentication();
 var server = app.listen(port);
 const io = require('socket.io')(server, {
-    origin: "http://webproject.host1712.keenetic.link/",
+    //origin: "http://webproject.host1712.keenetic.link/",
     methods: ["GET", "POST"],
     credentials: true
 });

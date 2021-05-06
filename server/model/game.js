@@ -19,7 +19,7 @@ class Game {
         this.playerIds = [];
         this.pidToSocketDict = {};
         const Board = require('../model/board/board').board;
-        this.boardId = new Board(this.id, this.playerIds);
+        this.board = new Board(this.id, this.playerIds);
         this.ongoing = false;
         this.save();
     }
@@ -67,7 +67,7 @@ class Game {
         });
     }
     static getGame(id, callback) {
-        cache.get(this.gameName, (err, reply) => {
+        cache.get(id, (err, reply) => {
             if (err) {
                 console.log(err);
             }

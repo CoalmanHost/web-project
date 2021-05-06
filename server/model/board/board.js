@@ -51,6 +51,10 @@ class BoardSide {
         return this.firstLine.concat(this.secondLine).concat(this.thirdLine);
     }
 
+    putCardToHand(card) {
+        this.handCards.push(card);
+    }
+
     putCard(card) {
         this.handCards.remove(card);
         this.attackPower += card.attackPower;
