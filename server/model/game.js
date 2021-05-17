@@ -1,5 +1,6 @@
 const cache = require('../caches/cache').client;
 const eventer = require('../app').eventer;
+const Board = require('./board/board').board;
 
 function toObject(json) {
     return JSON.parse(json);
@@ -12,66 +13,81 @@ class Game {
     playerIds;
     board;
     ongoing;
-    constructor(room) {
+    constructor(room, readyCallback) {
         this.room = room;
-        this.id = room.replace('room', '');
+        this.id = `${room}`.replace('room', '');
         this.gameName = `game${this.id}`;
         this.playerIds = [];
         this.pidToSocketDict = {};
         const Board = require('../model/board/board').board;
-        this.board = new Board(this.id, this.playerIds);
+        this.board = new Board(this.id, []);
         this.ongoing = false;
-        this.save();
+        this.save(readyCallback);
     }
     getFullBoard(callback) {
-        let board = this.board;
-        let counter = 0;
-        board.playerIds.forEach((pid) => {
+        let board = JSON.parse(JSON.stringify(this.board));
+        Object.setPrototypeOf(board, Board.prototype);
+        board.sides = {};
+        board.playerIds.forEach((pid, i) => {
             board.getSide(pid, (side) => {
-                board.sides.push(side);
-                counter += 1;
-            })
-        });
-        while (counter != board.playerIds.length) {}
-        callback(board);
-    }
-    addPlayer(playerId) {
-        this.playerIds.push(playerId);
-    }
-    start() {
-        this.ongoing = true;
-        eventer.on('inner fight complete', (winnerId) => {
-            this.board.getSide(winnerId, (side) => {
-                if (side.wins >= 2) {
-                    eventer.emit('game end', this.room, winnerId);
-                    return;
+                board.sides[pid] = side;
+                if (i >= board.playerIds.length - 1) {
+                    callback(board);
                 }
-                eventer.emit('fight complete', this.room, winnerId);
             })
-
-        })
-        eventer.on('inner put card', (line, card) => {
-            eventer.emit('board update', this);
         });
-        eventer.on('board update', (board) => {
-            this.save();
-        })
-        this.save();
+    }
+    addPlayer(playerId, callback) {
+        this.playerIds.push(playerId);
+        this.board.addPlayer(playerId, callback);
+    }
+    start(callback) {
+        this.ongoing = true;
+        // eventer.on('inner fight complete', (winnerId) => {
+        //     this.board.getSide(winnerId, (side) => {
+        //         if (side.wins >= 2) {
+        //             eventer.emit('game end', this.room, winnerId);
+        //             return;
+        //         }
+        //         eventer.emit('board update', this);
+        //     })
+        //
+        // })
+        // eventer.on('inner put card', (side, line, card) => {
+        //     let board = this.board;
+        //     board.saveSide(side, () => {
+        //         eventer.emit('board update', this);
+        //     });
+        // });
+        this.board.recalcTurns(() => {
+            this.save(callback);
+        });
     }
     json() {
         return JSON.stringify(this);
     }
     save(callback) {
         cache.set(`game${this.id}`, this.json(), (err, reply) => {
-            callback();
+            if (callback) {
+                callback();
+            }
         });
     }
     static getGame(id, callback) {
-        cache.get(id, (err, reply) => {
+        cache.get(`game${id}`, (err, reply) => {
             if (err) {
                 console.log(err);
             }
-            else callback(toObject(reply));
+            else {
+                if (reply) {
+                    let game = toObject(reply);
+                    Object.setPrototypeOf(game, Game.prototype);
+                    Object.setPrototypeOf(game.board, Board.prototype);
+                    callback(game);
+                    return;
+                }
+                callback(reply);
+            }
         });
     }
 }

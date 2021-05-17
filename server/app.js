@@ -3,7 +3,7 @@ const caches = require('./caches/cache.js')
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-const rm = require('./logic/gamemanager.js');
+const gm = require('./logic/gamemanager.js');
 const cache = require('./caches/cache');
 const auth = require('./logic/auth');
 const port = require('./config').port;
@@ -30,33 +30,33 @@ Array.prototype.remove = function() {
     return this;
 };
 
-app.get('/', function (request, response) {
+app.get('/*', function (request, response) {
    response.sendFile(path.join(__dirname, '../', 'build', 'index.html'));
 });
 
-app.get('/register', function (request, response) {
-    response.sendFile(path.join(__dirname, '../', 'build', 'register-page.html'));
-});
+// app.get('/register', function (request, response) {
+//     response.sendFile(path.join(__dirname, '../', 'build', 'register-page.html'));
+// });
 
-app.post('/register', urlencodedParser, function (request, response) {
-    if(!request.body) return response.sendStatus(400);
-    console.log(`Registering new player with name ${request.body.userName}`);
-    let pid = database.addPlayer({name: request.body.userName, email: request.body.userEmail, password: request.body.userPassword }, function (err, pid) {
-        if (err) {
-            console.log(err);
-            response.sendStatus(500);
-        }
-        else {
-            console.log(`Successfully registered player ${request.body.userName} with id ${pid}`);
-            response.send(`Your id is ${pid}`);
-        }
-    });
-});
-
-app.get('/testreg', function (request, response) {
-    let pid = database.addPlayer({ name: 'CoalmanHost', password: '123456', email: 'bakush2108@gmail.com'});
-    response.send(`<h1>${pid}<h1>`);
-});
+// app.post('/register', urlencodedParser, function (request, response) {
+//     if(!request.body) return response.sendStatus(400);
+//     console.log(`Registering new player with name ${request.body.userName}`);
+//     let pid = database.addPlayer({name: request.body.userName, email: request.body.userEmail, password: request.body.userPassword }, function (err, pid) {
+//         if (err) {
+//             console.log(err);
+//             response.sendStatus(500);
+//         }
+//         else {
+//             console.log(`Successfully registered player ${request.body.userName} with id ${pid}`);
+//             response.send(`Your id is ${pid}`);
+//         }
+//     });
+// });
+//
+// app.get('/testreg', function (request, response) {
+//     let pid = database.addPlayer({ name: 'CoalmanHost', password: '123456', email: 'bakush2108@gmail.com'});
+//     response.send(`<h1>${pid}<h1>`);
+// });
 
 let activeModulesCount = 0;
 let modulesCount = 3;
@@ -74,14 +74,26 @@ cache.init();
 auth.initAuthentication();
 var server = app.listen(port);
 const io = require('socket.io')(server, {
-    //origin: "http://webproject.host1712.keenetic.link/",
+    origin: "http://webproject.host1712.keenetic.link",
     methods: ["GET", "POST"],
     credentials: true
 });
-rm.socketServer(io);
+gm.socketServer(io);
 
-// cache.client.keys('room*', (err, reply) => {
-//     reply.forEach((room) => {
-//        cache.client.del(room);
-//     });
-// })
+cache.client.keys('room*', (err, reply) => {
+    reply.forEach((room) => {
+        cache.client.del(room);
+    });
+})
+
+cache.client.keys('game*', (err, reply) => {
+    reply.forEach((room) => {
+        cache.client.del(room);
+    });
+})
+
+cache.client.keys('board*', (err, reply) => {
+    reply.forEach((room) => {
+        cache.client.del(room);
+    });
+})

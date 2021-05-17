@@ -5,8 +5,21 @@ function initBoard(number) {
     cache.hset(board, );
 }
 
+function removeCard(arr, cardId) {
+    let index = -1;
+    arr.forEach((card, i) => {
+        if (index === -1) {
+            if (card.id === cardId) {
+                index = i;
+                arr.splice(i, 1);
+            }
+        }
+    });
+}
+
 const cache = require('../../caches/cache').client;
 const eventer = require('../../app').eventer;
+const utils = require('../../utils');
 
 function toObject(json) {
     return JSON.parse(json);
@@ -40,9 +53,11 @@ class BoardSide {
 
     constructor(playerId) {
         this.playerId = playerId;
-        this.firstLine = new BoardLine();
-        this.secondLine = new BoardLine();
-        this.thirdLine = new BoardLine();
+        this.firstLine = [];
+        this.secondLine = [];
+        this.thirdLine = [];
+        this.attackPower = 0;
+        this.handCards = [];
         this.wins = 0;
         this.ready = false;
     }
@@ -55,33 +70,38 @@ class BoardSide {
         this.handCards.push(card);
     }
 
-    putCard(card) {
-        this.handCards.remove(card);
-        this.attackPower += card.attackPower;
-        card.attachEffect()
-        this.effects(() => {
-            eventer.emit('effects applied', );
-        });
+    putCard(card, callback) {
+        Object.setPrototypeOf(this.handCards, Array.prototype);
+        removeCard(this.handCards, card.id);
+        this.attackPower += card.value;
+        callback();
+        // card.attachEffect()
+        // this.effects(() => {
+        //     eventer.emit('effects applied', );
+        // });
     }
 
 
 
-    putToFirstLine(card) {
+    putToFirstLine(card, callback) {
+        Object.setPrototypeOf(this.firstLine, Array.prototype);
         this.firstLine.push(card);
-        this.putCard(card);
-        eventer.emit('inner put card', 'first', card);
+        this.putCard(card, callback);
+        //eventer.emit('inner put card', this, 'first', card);
     }
 
-    putToSecondLine(card) {
+    putToSecondLine(card, callback) {
+        Object.setPrototypeOf(this.secondLine, Array.prototype);
         this.secondLine.push(card);
-        this.putCard(card);
-        eventer.emit('inner put card', 'second', card);
+        this.putCard(card, callback);
+        //eventer.emit('inner put card', this, 'second', card);
     }
 
-    putToThirdLine(card) {
+    putToThirdLine(card, callback) {
+        Object.setPrototypeOf(this.thirdLine, Array.prototype);
         this.thirdLine.push(card);
-        this.putCard(card);
-        eventer.emit('inner put card', 'third', card);
+        this.putCard(card, callback);
+        //eventer.emit('inner put card', this, 'third', card);
     }
 
     setReady() {
@@ -89,9 +109,9 @@ class BoardSide {
     }
 
     clear() {
-        this.firstLine = new BoardLine();
-        this.secondLine = new BoardLine();
-        this.thirdLine = new BoardLine();
+        this.firstLine = [];
+        this.secondLine = [];
+        this.thirdLine = [];
     }
 
     json() {
@@ -102,19 +122,45 @@ class BoardSide {
 class Board {
     id;
     playerIds;
+    playersTurn;
+    turnNumber;
     boardName;
     constructor(number, playerIds) {
         this.id = number;
         this.boardName = `board${number}`;
         this.playerIds = playerIds;
+        this.playersTurn = {};
+        this.turnNumber = 0;
     }
-    addPlayer(playerId) {
+
+    addPlayer(playerId, callback) {
         let playerSide = new BoardSide(playerId);
         this.playerIds.push(playerId);
-        cache.hset(this.boardName, playerId, playerSide.json());
+        cache.hset(this.boardName, playerId, playerSide.json(), (err, reply) => {
+            this.getSide(playerId, (side) => {
+                callback(side);
+            });
+        });
     }
-    getPlayerSide(playerId) {
-        return toObject(this.cache.hget(this.boardName, playerId));
+
+    recalcTurns(callback) {
+        console.log('Turns recalc!');
+        this.playerIds.forEach((pid, i) => {
+            this.getSide(pid, (side) => {
+                if (side.ready === true && this.turnNumber === i) {
+                    this.turnNumber += 1;
+                }
+                console.log(`Turn calc for ${pid} index ${i} turn number ${this.turnNumber}`);
+                this.playersTurn[pid] = i === this.turnNumber;
+                if (i >= this.playerIds.length - 1) {
+                    this.turnNumber += 1;
+                    if (this.turnNumber >= this.playerIds.length) {
+                        this.turnNumber = 0;
+                    }
+                    callback();
+                }
+            })
+        });
     }
 
     getSide(playerId, callback) {
@@ -122,7 +168,11 @@ class Board {
             if (err) {
                 console.log(err);
             }
-            else callback(toObject(reply));
+            else {
+                let side = toObject(reply);
+                Object.setPrototypeOf(side, BoardSide.prototype);
+                callback(side);
+            }
         });
     }
 
@@ -136,28 +186,46 @@ class Board {
             callback(true);
         });
     }
-    fight(leftId, rightId) {
+
+    save(callback) {
+        eventer.on('inner side save', (i, all) => {
+            if (i >= all) {
+                callback();
+            }
+        })
+        this.playerIds.forEach()
+    }
+
+    fight(leftId, rightId, callback) {
         this.getSide(leftId, (leftSide) => {
            this.getSide(rightId, (rightSide) => {
-               leftSide.ready = false;
-               rightSide.ready = false;
                let value = leftSide.attackPower - rightSide.attackPower;
                let winnerId = leftId;
+               let winnerSide = leftSide;
+               leftSide.ready = false;
+               rightSide.ready = false;
+               leftSide.attackPower = 0;
+               rightSide.attackPower = 0;
+               leftSide.clear();
+               rightSide.clear();
                if (value === 0) {
-                   this.saveSide(leftSide, (err, reply) => {
-                       this.saveSide(rightSide, (err, reply))
-                       eventer.emit('inner fight complete', null);
+                   this.saveSide(leftSide, () => {
+                       this.saveSide(rightSide, () => {
+                           callback(null);
+                       });
                    });
                    return;
                }
                if (value < 0) {
                    winnerId = rightId;
+                   winnerSide = rightSide;
                }
-               this.getSide(winnerId, (side) => {
-                   side.wins += 1;
-                   this.saveSide(leftSide, (err, reply) => {
-                       this.saveSide(rightSide, (err, reply))
-                           eventer.emit('inner fight complete', winnerId);
+               winnerSide.wins += 1;
+               this.saveSide(winnerSide, () => {
+                   this.saveSide(leftSide, () => {
+                       this.saveSide(rightSide, () => {
+                           callback(winnerId);
+                       });
                    });
                });
            });
