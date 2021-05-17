@@ -2,12 +2,11 @@
     padding: 0;
     margin: 0;
 }
+html{
+    height: 100%;
+}
 body{
-    background-image: url("https://the-flow.ru/uploads/images/resize/830x0/adaptiveResize/03/01/24/23/76/a536f2740cd7.jpg");
-    background-repeat: no-repeat;
-    background-size:100%;
     height:100%;
-    background-color: cornflowerblue;
 }
 #root{
     height:100%;
@@ -15,25 +14,28 @@ body{
     display: flex;
     justify-content: center;
 }
-.container{
-    width:80%;
+.container-main{
+    width:100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height:100%;
-}
-html{
-    height:100%;
+    align-items: center;
+
+    background-image: url("./pics/main-background.jpg");
+    background-repeat: no-repeat;
+    background-size:100%;
+    background-color: chocolate;
 }
 
-.name{
+.name-main{
     margin:50px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
 }
-.footer{
+.footer-main{
     margin: 50px;
 }
 button{
@@ -41,7 +43,7 @@ button{
     margin-top: 15px;
     padding:5px;
 }
-#rooms .room{
+#rooms .room-main{
     padding:20px;
     margin: 20px;
     background-color: forestgreen;

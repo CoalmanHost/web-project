@@ -1,27 +1,28 @@
-import logo from './logo.svg';
 import './App.css';
 import './LoginForm.js';
-/*import Register from './RegisterForm';*/
+import Register from './RegisterForm';
 import './fonts.css';
 import Main from './MainField.js';
-import Register from "./RegisterForm";
 import Login from "./LoginForm";
-import LoginForm from "./LoginForm";
 import Room from "./Room"
-
-import openSocket from 'socket.io-client';
-const socket = openSocket("http://25.74.123.131:8080");
-socket.on('get rooms', rooms => {
-    console.log(rooms);
-} ) ;
-socket.emit("create room");
+import "./lobby.css";
+import Lobby from "./lobby";
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
+import React from "react";
+/*import "/public/StarJedi.ttf";*/
 
 function App() {
-
-  return (
-
-     <Room></Room>
-  );
+    return (
+            <Router>
+                <Switch>
+                    <Route exact path={"/"} component={Login}/>
+                    <Route exact path={"/register"} component={Register}/>
+                    <Route exact path={"/main_room_page"} component={Main}/>
+                    <Route path={"/lobby:room"} component={Lobby}/>
+                    {/*<Route path={"/playing-room:room"} component={Room}/>*/}
+                </Switch>
+            </Router>
+    );
 }
 
 export default App;

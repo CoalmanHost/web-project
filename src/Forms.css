@@ -2,7 +2,22 @@
     padding:0;
     margin:0;
 }
-body{
+.register-page{
+    font-family: 'JediRu', serif;
+    letter-spacing: 4px;
+    height: 100%;
+    width:100%;
+    background: black;
+    background-image: url("https://img5.goodfon.ru/wallpaper/nbig/f/ef/mizuri-official-by-mizuri-official-star-wars-zvezdnye-voiny.jpg");
+    background-position-y: -150px;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+}
+.login-page{
+    width: 100%;
     font-family: 'JediRu', serif;
     letter-spacing: 4px;
     min-height: 100vh;
@@ -13,6 +28,7 @@ body{
     background-repeat: no-repeat;
     display:flex;
     justify-content: center;
+    align-items: center;
 }
 .register{
     box-shadow: 0 0 10px #ea3438;
@@ -22,7 +38,7 @@ body{
     margin-top: 5%;
     background-image: url("https://i.gifer.com/origin/7e/7e4abc8a38403620fdb573948aa5c9b1_w200.gif");
 }
-.register form input{
+.register input{
     font-family: 'Crime', serif;
     padding-left: 20px;
     margin: 20px;
@@ -37,7 +53,7 @@ body{
     border-bottom: 1px solid #ea3438;
     box-shadow: 0 2px 5px #ea3438;
 }
-.register form{
+.register {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -47,7 +63,7 @@ body{
     color:white;
     padding: 5px 5px 10px;
 }
-.register form h4{
+.register h4{
     padding-left: 40px;
     color:white;
     font-size: 15px;
@@ -84,7 +100,7 @@ label{
 }
 
 @media (min-width:300px) and (max-width:500px){
-    body{
+    login-page{
         background-size: 100%;
         background-image: url("https://img1.akspic.ru/previews/7/3/7/8/4/148737/148737-zvezdnye_vojny_battlefront-temnota-rokkoncert-ea_dice-performans-360x640.jpg");
     }
@@ -104,4 +120,7 @@ label{
         top: 20%;
         right: 15%;
     }
+}
+span{
+    color:white;
 }

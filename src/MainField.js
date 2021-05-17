@@ -1,100 +1,93 @@
 import React from 'react';
 import './MainField.css';
 import "./fonts.css";
+import Socket from "./Mainsocket";
+import {Component} from 'react';
 
-const Main = () => {
-    function searchRoom() {
-        document.getElementById("sf").addEventListener('click', function () {
-            const word = document.getElementById("search-field").value;
-            const rooms = document.getElementsByClassName("room");
-            for (let i = 0; i < rooms.length; i++) {
-                if (!rooms[i].classList.contains(word)) {
-                    rooms[i].style.display = "none";
-                }
-            }
-        })
-    }
+//let Socket = getSocket();
+export default class Main extends Component {
+    render() {
 
-    function refreshRooms() {
-        document.getElementById("refresh").addEventListener('click', function () {
-            const rooms = document.getElementsByClassName("room");
-            for (let i = 0; i < rooms.length; i++) {
-                rooms[i].style.display = "block";
-            }
-        })
-    }
-
-    function newRoom() {
-        document.getElementById("hide-content").style.display = "flex";
-        const body = document.getElementsByTagName("body");
-        for (let i = 0; i < body.length; i++) {
-            body[i].style.overflow = "invisible";
+        function createNewRoom() {
+            Socket.createNewRoom();
+            console.log("new Room. Our token is: " + Socket.token);
         }
-    }
 
-    function createRoom() {
-        console.log("clicked!")
-        const room = document.getElementById("room-name").value;
-        if (room !== "") {
-            const gen = Math.ceil(Math.random() * 100000000);
-            document.getElementById("rooms").innerHTML += "<a href = '#'><div class='room " + room + " " + gen + "'> Комната " + room + " (id:" + gen + ")</div></a>";
+        function joinExistingRoom(room) {
+            Socket.socket.emit('join room', room, () => {
+                console.log("room");
+                window.location.href="/lobby" + room;
+            })
+
+        }
+
+        function refreshRooms() {
+            console.log("refresh invoked");
+            Socket.socket.emit("get rooms", rooms => {
+                console.log(rooms);
+                const roomPlace = document.getElementById('rooms');
+                roomPlace.innerHTML = "";
+                for (let i = 0; i < rooms.length; i++) {
+                    //console.log(rooms[i]);
+                    roomPlace.innerHTML += "<div class='room-main' id='" + rooms[i].toString().substring(4) + "'> Комната id:" + rooms[i].toString().substring(4) + ")</div>";
+                }
+                document.querySelectorAll(".room-main").forEach(function (item) {
+                    console.log(item);
+                        item.addEventListener('click', function (){
+                            joinExistingRoom(item.id);
+                        });
+                    }
+                )
+            })
+        }
+
+        function closeRoomChoice() {
             document.getElementById("hide-content").style.display = "none";
             const body = document.getElementsByTagName("body");
             for (let i = 0; i < body.length; i++) {
                 body[i].style.overflow = "visible";
             }
-        } else {
-            alert("You should insert a room name");
         }
-    }
 
-    function closeRoomChoice() {
-        document.getElementById("hide-content").style.display = "none";
-        const body = document.getElementsByTagName("body");
-        for (let i = 0; i < body.length; i++) {
-            body[i].style.overflow = "visible";
-        }
-    }
-
-    return (
-        <div className="container">
-            <div className="name">
-                <h1>Игровые комнаты</h1>
-                <p>Для начала игры выберите игровую комнату или создайте свою!</p>
-                <button className='new-room' onClick={newRoom}>
-                    + Создать игровую комнату
-                </button>
-                <div id={"search"}>
-                    <input id={"search-field"} placeholder={"Поиск"}></input>
-                    <button id={"sf"} onClick={searchRoom}>Найти</button>
-                    <button id={"refresh"} onClick={refreshRooms}>Обновить</button>
+        return (
+            <div className="container-main" id="main-field">
+                <div className="name-main">
+                    <h1>Игровые комнаты</h1>
+                    <p>Для начала игры выберите игровую комнату или создайте свою!</p>
+                    <button className='new-room-main' id={"new--room"} onClick={createNewRoom}>
+                        + Создать игровую комнату
+                    </button>
+                    <div id={"search"}>
+                        <input id={"search-field"} placeholder={"Поиск"}></input>
+                        <button id={"sf"}>Найти</button>
+                        <button id={"refresh"} onClick={refreshRooms}>Обновить</button>
+                    </div>
                 </div>
-            </div>
-            <div className="rooms" id="rooms">
+                <div className="rooms-main" id="rooms">
 
-            </div>
-            <div className="footer">
-                <h3>Контактная информация</h3>
-                <p>Telegram</p>
-                <p>Email</p>
-                <p>VK</p>
-            </div>
-            <div id="hide-content">
-                <div id="Modal-window">
-                    <button id={"close"} onClick={closeRoomChoice}>X</button>
-                    <div id="form-modal">
-                        <label>
-                            Введите название комнаты
-                            <input name={"room-name"} id="room-name"></input>
-                        </label>
-                        <label>
-                            <input type={"submit"} id={"sub"} onClick={createRoom} value={"Создать"}></input>
-                        </label>
+                </div>
+                <div className="footer-main">
+                    <h3>Контактная информация</h3>
+                    <p>Telegram</p>
+                    <p>Email</p>
+                    <p>VK</p>
+                </div>
+                <div id="hide-content">
+                    <div id="Modal-window">
+                        <button id={"close"} onClick={closeRoomChoice}>X</button>
+                        <div id="form-modal">
+                            <label>
+                                Введите название комнаты
+                                <input name={"room-name"} id="room-name"></input>
+                            </label>
+                            <label>
+                                <input type={"submit"} id={"sub"} value={"Создать"}></input>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    )
-
+        )
+    }
 }
-export default Main;
+
